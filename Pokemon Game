@@ -1,0 +1,368 @@
+About this project: Generates a pokemon game based on user input
+Assumptions: User only inputs options on the menu
+All work below was performed by Tori Lucas */
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <string>
+#include <ctime>
+#include <cctype>
+using namespace std;
+
+struct Pokemon
+{
+    int pokeNo, catchPercent, noCaught, noSeen;
+    string name, type, region, dexEntry;
+};
+
+//function declarations
+void menu();
+bool hunt(string region, int size, Pokemon dex[]);
+void viewStats(Pokemon dex []);
+void inventory(int &pBallCount, int &gBallCount, int &BallCount);
+void pokemon(string trainerName, Pokemon dex []);
+void dexList(int size, Pokemon dex[]);
+void lwerCase(string menuChoice);
+
+int main() 
+{
+   
+    string trainerName, region, menuChoice;
+    bool flag = true;
+    int size;
+    Pokemon * dex; 
+    ifstream IN;
+    int r;
+    int gBallCount, uBallCount, pBallCount;
+    //seed random number generator
+    srand(time(0));
+    
+    IN.open("poke.txt");
+    
+    if(!IN)
+    {
+        cout << "Bad file..." << endl;
+        exit(0);
+    }
+    
+    IN >> size;
+    dex = new Pokemon[size];
+    string temp;
+    for(int i = 0; i < size; i++)
+    {
+        getline(IN, temp, ',');
+        dex[i].pokeNo = stoi(temp);
+        getline(IN, dex[i].name, ',');
+        getline(IN, dex[i].type, ',');
+        getline(IN, dex[i].region, ',');
+        getline(IN, temp, ',');
+        dex[i].catchPercent = stoi(temp);
+        getline(IN, dex[i].dexEntry);
+        dex[i].noCaught = 0;
+        dex[i].noSeen = 0;
+        //getline(IN, dex[i].noCaught, ',');
+        //getline(IN, dex[i].noSeen, ',');
+    }
+    
+    IN.close();
+   
+    //initiate program
+    cout << "What's your name, trainer?" << " > ";
+    getline(cin, trainerName);
+    
+    //display welcome message
+    cout << "\nWelcome, " << trainerName << ", to the Programming I Safari Zone!\n";
+    cout << "You'll have 30 chances to catch Pokemon, make them count!\n"; 
+    cout << "The hunt will end when you choose or when you run out of Pokeballs.\n";
+    cout << "\nWhich region would you like to visit?\n";
+    
+    //validate region entry
+    do
+    {
+        cout << "Enter Kanto, Johto, Hoenn, or Sinnoh\n" << " > ";
+        cin >> region;
+        for(int i = 0; i < region.size(); i++)
+            region[i] = tolower(region[i]);
+    }while(region != "kanto" && region != "johto" &&
+           region != "hoenn" && region != "sinnoh");
+    
+    
+    if(region == "Kanto" || region == "kanto")
+    {
+        cout << "\nTravelling to KANTO\n";
+    }
+    else if(region == "Johto" || region == "johto")
+    {
+        cout << "\nTravelling to JOHTO\n";
+    }    
+    else if(region == "Hoenn" || region == "hoenn")
+    {
+        cout << "\nTravelling to HOENN\n";
+    }  
+    else if(region == "Sinnoh" || region == "sinnoh")
+    {
+        cout << "\nTravelling to SINNOH\n";
+    }  
+   
+    menu();
+    
+    while(flag == true)
+    {
+        cout << "Selection > ";
+        getline(cin, menuChoice);
+        for(int i = 0; i < menuChoice.size(); i++)
+            menuChoice[i] = tolower(menuChoice[i]);
+        
+        if(menuChoice == "hunt")
+            if (hunt(region, size, dex) == false) 
+            {
+                pokemon(trainerName, dex);
+                viewStats(Pokemon dex []);
+                return 0;
+                delete [] dex;
+            }
+        else if(menuChoice == "pokemon")
+            pokemon(trainerName, dex);
+        else if(menuChoice == "statistics")
+            viewStats(dex);
+        else if(menuChoice == "inventory")
+            inventory(pBallCount, gBallCount, uBallCount);
+        else if(menuChoice == "dex name")
+            dexList(size, dex);
+        else if(menuChoice == "menu")
+            menu();
+        else if(menuChoice == "exit")
+        {
+            pokemon(trainerName, dex);
+            viewStats(dex);
+            flag = false;
+            delete [] dex;
+        }
+    }
+    
+    return 0;
+}
+
+void menu()
+{
+    cout << "\nHUNT         (Go hunting for Pokemon!)\n";
+    cout << "POKEMON      (See the Pokemon you've caught.)\n";
+    cout << "STATISTICS   (See your catch statistics.)\n";
+    cout << "INVENTORY    (See your current inventory.)\n";
+    cout << "DEX NAME     (ex: DEX BULBASAUR would view Bulbasaur's Pokedex entry.)\n";
+    cout << "MENU         (Reprint this menu.)\n";
+    cout << "EXIT\n";
+}
+
+bool hunt(string region, int size, Pokemon dex[])
+{
+    int r, ballChoice;
+    int pBallCount = 10, gBallCount = 10, uBallCount = 10;
+    int noCaught = 0;
+    int chance;
+    bool flag = true;
+    
+    if(region == "kanto")
+    {
+        r = rand() % 151 + 1;
+    }
+    else if(region == "johto")
+    {
+        r = rand() % 100 + 152;
+    }    
+    else if(region == "hoenn")
+    {
+        r = rand() % 135 + 252;
+    }  
+    else if(region == "sinnoh")
+    {
+        r = rand() % 107 + 387;
+    }  
+    
+    //r =100;
+    
+    while(r < 494)
+    {
+        cout << "A wild " << dex[r].name << "has appeared!" << endl;
+        r++;
+    }
+    
+    cout << "Choose a ball to throw:\n";
+    cout << "1 - Poke Ball   (You have: " << pBallCount << ")\n";
+    cout << "2 - Great Ball  (You have: " << gBallCount << ")\n";
+    cout << "3 - Ultra Ball  (You have: " << uBallCount << ")\n";
+    cout << "Selection > ";
+    cin >> ballChoice;
+    
+    chance = rand() % 100 + 1;
+    
+    if(ballChoice == 1)
+    {
+        for(int i = 10; i <= 10; i++)
+        {
+	        cout << "Threw a Poke Ball!\n";
+	        pBallCount--;
+	        if(chance <= dex[r].catchPercent)
+            {
+                cout << "Congratulations! You have caught " << dex[r].name << "!" << endl;
+                dex[r].noCaught++;
+                dex[r].noSeen++;
+            }
+            else if(dex[r].catchPercent == 0)
+	        {
+                cout << "Oh! That's a baby Pokemon! We'll take them to the daycare." << endl;
+                dex[r].noCaught++;
+                dex[r].noSeen++;
+	        }
+            else 
+            {
+                cout << dex[r].name << " ran away. :-( ";
+                dex[r].noSeen++;
+            }
+        }
+        if(pBallCount == 0)
+        {
+            cout << "You have none of them!\n";
+        }
+    }
+    else if(ballChoice == 2)
+    {
+        for(int i = 10; i <= 10; i++)
+        {
+	        cout << "Threw a Great Ball!\n";
+	        gBallCount--;
+	        if(chance <= dex[r].catchPercent + 20)
+	        {
+                cout << "Congratulations! You have caught " << dex[r].name << "!" << endl;
+                dex[r].noCaught++;
+                dex[r].noSeen++;
+	        }
+	        else if(dex[r].catchPercent == 0)
+	        {
+                cout << "Oh! That's a baby Pokemon! We'll take them to the daycare." << endl;
+                dex[r].noCaught++;
+                dex[r].noSeen++;
+	        }
+            else 
+            {
+                cout << dex[r].name << " ran away. :-( ";
+                dex[r].noSeen++;
+            }
+        }
+        if(gBallCount == 0)
+        {
+            cout << "You have none of them!\n";
+        }
+    }
+    else if(ballChoice == 3)
+    {
+        for(int i = 10; i <= 10; i++)
+        {
+	        cout << "Threw a Ultra Ball!\n";
+	        uBallCount--;
+	        if(chance <= dex[r].catchPercent + 40)
+	        {
+                cout << "Congratulations! You have caught " << dex[r].name << "!" << endl;
+                dex[r].noCaught++;
+                dex[r].noSeen++;
+	        }
+	        else if(dex[r].catchPercent == 0)
+	        {
+                cout << "Oh! That's a baby Pokemon! We'll take them to the daycare." << endl;
+                dex[r].noCaught++;
+                dex[r].noSeen++;
+	        }
+            else 
+            {
+                cout << dex[r].name << " ran away. :-( ";
+                dex[r].noSeen++;
+            }
+        }
+        if(uBallCount == 0)
+        {
+            cout << "You have none of them!\n";
+        }
+    }
+    else
+    {    
+        cout << "Invalid Selection. Try again.\n";
+    }
+
+  
+  if(pBallCount == 0 && gBallCount == 0 && uBallCount == 0)
+  {
+    cout << "No balls remaining." << endl;
+    flag = false;
+  }
+
+    
+ return flag;   
+}  
+    
+void viewStats(Pokemon dex [])
+{
+    int totalAttempts, catchRate;
+    int r;
+    
+    cout << "Total Pokemon Caught: " << dex[r].noCaught << endl; 
+    cout << "Total Pokemon Seen: " << dex[r].noSeen << endl;
+        
+    //calculation for catch percentage
+    totalAttempts = dex[r].noSeen + dex[r].noCaught;
+    catchRate = ((double)dex[r].noCaught/totalAttempts )* 100;
+    
+    cout << fixed << setprecision(2);
+    cout << "Overall Catch Rate: " << catchRate << "%" << endl;
+    
+    return;
+}
+
+void inventory(int pBallCount, int gBallCount, int uBallCount)
+{
+    cout << "You have: \n";
+    cout << pBallCount << " Poke Balls";
+    cout << gBallCount << " Great Balls";
+    cout << uBallCount << " Ultra Balls";
+}
+
+void pokemon(string trainerName, int size, Pokemon dex [])
+{
+    cout << trainerName<< "'s POKEMON: " << endl;
+    for(int i = 0; 0 < size; i++)
+    {
+        if (dex[i].noCaught > 0)
+            cout << dex[i].pokeNo << " " << dex[i].name << endl;      
+    } 
+}
+
+void dexList(int size, Pokemon dex[])
+{
+    string pokeDex;
+    bool flag = 0;
+    
+    getline(cin, pokeDex);
+    
+    for(int i = 0; i < pokeDex.size(); i++)
+        pokeDex[i] = tolower(pokeDex[i]);
+    
+    
+    for(int i = 0; 0 < size; i++)
+    {
+        if (dex[i].name == pokeDex)
+        {
+            cout << "NAME: " << dex[i].name << endl;
+            cout << "Type: " << dex[i].type << endl;          
+            cout << dex[i].dexEntry  << endl;      
+            flag = 1;
+            break;
+        }
+    } 
+    
+    if (flag == 0)
+        cout << "No Pokedex entry for" << pokeDex << endl;
+    
+}
+
+
+ 
+ 
